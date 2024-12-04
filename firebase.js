@@ -5,12 +5,12 @@ const GoogleAuthProvider=require('firebase/auth');
 const {getStorage,ref, uploadBytes}=require('firebase/storage')
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBMU1YOkI0kQZc5L8dBBDIkjObVymwUPCc",
-    authDomain: "shiva-6ac48.firebaseapp.com",
-    projectId: "shiva-6ac48",
-    storageBucket: "shiva-6ac48.appspot.com",
-    messagingSenderId: "934556573168",
-    appId: "1:934556573168:web:1df2165631b2f0f10e9135"
-  };
+  apiKey: "AIzaSyBQxN65-T_O2hrBnNfUPzXLFAloWrbc-H0",
+  authDomain: "shiva-e-comm.firebaseapp.com",
+  projectId: "shiva-e-comm",
+  storageBucket: "shiva-e-comm.appspot.com",
+  messagingSenderId: "615522822837",
+  appId: "1:615522822837:web:2bc3e12f72fdb837502cfc"
+};
 
 module.exports=firebase.initializeApp(firebaseConfig);
