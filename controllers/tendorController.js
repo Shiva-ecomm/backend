@@ -1,6 +1,6 @@
 const admin = require('firebase-admin'); // Import Firebase Admin SDK
 const { getDownloadURL, ref, uploadBytesResumable } = require('firebase/storage');
-const firebase = require('../firebase');
+const firebase = require('../helpers/firebase');
 const nodemailer = require('nodemailer');
 const {  getStorage } = require('firebase/storage');
 const serviceAccount = require('../helpers/serviceAccount'); // Replace with the path to your service account key file
