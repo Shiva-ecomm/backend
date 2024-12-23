@@ -14,6 +14,9 @@ const postSchema = mongoose.Schema({
     description: {
         type: String,
     },
+    color:[{
+        type:String
+    }],
     qty: {
         type: String,
         default: 0
@@ -29,6 +32,9 @@ const postSchema = mongoose.Schema({
         rate: {
             type: Decimal128
         },
+        color:
+            { type: String }
+        ,
         addedOn:{
             type:Date,
             default:Date.now()

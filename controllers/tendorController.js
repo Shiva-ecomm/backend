@@ -18,7 +18,8 @@ admin.initializeApp({
 const uploadImagesController = async (req, res) => {
     try {
         const files = req.files; // `req.files` contains the uploaded files
-        const { title, descr, qty, validParty, id, name } = req.body;
+        const { title, descr,colors ,qty, validParty, id, name } = req.body;
+        console.log(req.body)
 
         // Check for uploaded files
         if (!files || files.length === 0) {
@@ -61,6 +62,7 @@ const uploadImagesController = async (req, res) => {
         const newPost = new postModel({
             title,
             description: descr,
+            color:JSON.parse(colors),
             qty,
             images: downloadURLs,
             validParty: JSON.parse(validParty),
@@ -228,12 +230,12 @@ const updateQuotationController=async(req,res)=>{
     try{
         const clientId=req.params.clientId;
         const postId=req.params.postId;
-        const {rate}=req.body;
+        const {rate,color}=req.body;
         const post=await postModel.findOne({_id:postId});
         if(!post){
             return res.status(404).send({message:'Post not found',success:false})
         }
-        post.quotations.push({party:clientId,rate:rate});
+        post.quotations.push({party:clientId,rate:rate,color:color});
         await post.save();
         return res.status(200).send({success:true,message:'Quotation added successfully',post});
 
