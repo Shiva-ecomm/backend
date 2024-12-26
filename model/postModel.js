@@ -27,7 +27,7 @@ const postSchema = mongoose.Schema({
     quotations: [{
         party: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'ClientModel'  // Replace with your actual Client model name
+            ref: 'clients'  // Replace with your actual Client model name
         },
         rate: {
             type: Decimal128

@@ -1,5 +1,5 @@
 const express=require('express');
-const { uploadImagesController, getAllTendorsController, getTendorDetail, changeStateController, updateQuotationController } = require('../controllers/tendorController');
+const { uploadImagesController, getAllTendorsController, getTendorDetail, changeStateController, updateQuotationController, handleShareController } = require('../controllers/tendorController');
 const multer = require('multer');
 
 // Set up multer to store files in memory
@@ -18,5 +18,7 @@ router.get('/get-tendor/:id',getTendorDetail)
 router.post('/change-state/:id',changeStateController)
 
 router.post('/update-quotation/:clientId/:postId',updateQuotationController)
+
+router.post('/share/:id',handleShareController);
 
 module.exports=router;

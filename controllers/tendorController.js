@@ -185,28 +185,42 @@ const getAllTendorsController = async (req, res) => {
 
 
 
-const getTendorDetail=async(req,res)=>{
-    try{
-        const id=req.params.id;
-        const tendor=await postModel.findOne({_id:id});
-        if(!tendor){
-            return res.status(400).send({message:'No tendor found',success:false})
-        }
-        let quotations=[];
-        for(let item of tendor?.quotations){
-            const client=await clientModel.findOne({_id:item?.party});
-            if(!client){
-                return res.status(404).send({message:'Party not found',success:false})
-            }
-            quotations.push({addedOn:item?.addedOn,name:client?.name,email:client?.email,phone:client?.phone,city:client?.city,id:client?._id,rate:item?.rate})
-        }
-        return res.status(200).send({message:'tendor fetched',success:true,tendor,quotations})
+const getTendorDetail = async (req, res) => {
+    try {
+        const id = req.params.id;
 
-    }catch(error){
-        // console.log(error.message)
-        return res.status(500).send({message:'Internal Server Error',success:false})
+        // Fetch the tender and populate quotations with client details in a single query
+        const tendor = await postModel
+            .findOne({ _id: id })
+            .populate({
+                path: "quotations.party",
+                select: "name email phone city companyName", // Include companyName
+                model: "clients"
+            });
+
+        if (!tendor) {
+            return res.status(400).send({ message: 'No tendor found', success: false });
+        }
+
+        // Map quotations to include only necessary data
+        const quotations = tendor.quotations.map(item => ({
+            addedOn: item?.addedOn,
+            name: item?.party?.name,
+            email: item?.party?.email,
+            phone: item?.party?.phone,
+            city: item?.party?.city,
+            companyName: item?.party?.companyName, // Include companyName in the response
+            id: item?.party?._id,
+            rate: item?.rate
+        }));
+
+        return res.status(200).send({ message: 'Tendor fetched', success: true, tendor, quotations });
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send({ message: 'Internal Server Error', success: false });
     }
-}
+};
+
 
 const changeStateController=async(req,res)=>{
     try{
@@ -245,4 +259,102 @@ const updateQuotationController=async(req,res)=>{
     }
 }
 
-module.exports = { uploadImagesController,getAllTendorsController,getTendorDetail,changeStateController,updateQuotationController };
+
+const handleShareController = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(404).send({ message: "No ID found", success: false });
+        }
+
+        const tendor = await postModel.findOne({ _id: id });
+        if (!tendor) {
+            return res.status(400).send({ message: "No tendor found", success: false });
+        }
+
+        const partyList = tendor?.validParty || [];
+        if (!partyList.length) {
+            return res.status(400).send({ message: "No valid parties to notify", success: false });
+        }
+
+        const transporter = nodemailer.createTransport(
+            smtpTransport({
+                host: 'smtp.gmail.com',
+                port: 587,
+                secure: false,
+                auth: {
+                    user: process.env.EMAIL_ID,
+                    pass: process.env.EMAIL_PASS_KEY,
+                },
+            })
+        );
+
+        const closingDate = new Date(Date.now() + 1000 * 60 * 60 * 48); // 48 hours from now
+
+        // Notifications array
+        const sendNotifications = partyList.map(async (partyId) => {
+            try {
+                const party = await clientModel.findOne({ _id: partyId });
+                if (!party) {
+                    console.error(`Party with ID ${partyId} not found.`);
+                    return;
+                }
+
+                // Send email
+                const mailOptions = {
+                    from: process.env.EMAIL_ID,
+                    to: party.email,
+                    subject: 'Result of Tendor',
+                    text: `Dear Vendor,
+                    
+                    The Tendor has been closed;
+                    
+                    Tender Title: ${tendor?.title}
+                    Closing Date: ${new Date(tendor?.closesOn).toLocaleDateString()}
+                    Details: ${tendor?.description}
+                    
+                    To view the result, please visit the below link:
+                    https://shiva-e-comm.web.app/tendor-result/${id}
+                    
+                    Best regards,
+                    Shiva TexFabs`,
+                };
+
+                await transporter.sendMail(mailOptions);
+                console.log(`Email sent to ${party.email}`);
+
+                // WhatsApp Notification
+                if (party.phone) {
+                    const predefinedMessage = `We are excited to announce that a new tender has been opened!
+                    
+                    Tender Title: ${tendor?.title}
+                    Closing Date: ${new Date(closingDate).toLocaleDateString()}
+                    Details: ${tendor?.description}
+                    
+                    We encourage you to review the tender and submit your proposal by the closing date. If you have any questions or need further information, please don't hesitate to reach out. Below is the link to fill the tender: https://shiva-e-comm.web.app/SharingPage/${partyId}/${tendor._id}
+                    
+                    Best regards`;
+
+                    const whatsappUrl = `https://wa.me/${party.phone}?text=${encodeURIComponent(predefinedMessage)}`;
+                    console.log(`WhatsApp message link for ${party.phone}: ${whatsappUrl}`);
+                } else {
+                    console.log(`No phone number for party ID: ${partyId}, skipping WhatsApp message.`);
+                }
+            } catch (notificationError) {
+                console.error(`Error sending notification to party ID: ${partyId}`, notificationError);
+            }
+        });
+
+        // Wait for all notifications to complete
+        await Promise.all(sendNotifications);
+
+        return res.status(200).send({ message: "Notifications sent successfully", success: true });
+    } catch (error) {
+        console.error("Internal server error:", error);
+        return res.status(500).send({ message: "Internal Server Error", success: false });
+    }
+};
+
+
+module.exports = { uploadImagesController,getAllTendorsController,getTendorDetail,changeStateController,updateQuotationController,handleShareController };
