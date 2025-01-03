@@ -211,7 +211,8 @@ const getTendorDetail = async (req, res) => {
             city: item?.party?.city,
             companyName: item?.party?.companyName, // Include companyName in the response
             id: item?.party?._id,
-            rate: item?.rate
+            rate: item?.rate,
+            color:item?.color
         }));
 
         return res.status(200).send({ message: 'Tendor fetched', success: true, tendor, quotations });
